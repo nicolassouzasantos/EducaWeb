@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro - EducaWeb</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: #ffffff;
+            width: 360px;
+            padding: 32px 28px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+        }
+
+        h2 {
+            margin: 0;
+            margin-bottom: 4px;
+            font-size: 22px;
+            color: #1e293b;
+        }
+
+        p.subtitle {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+            color: #475569;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px 11px;
+            margin-bottom: 14px;
+            border-radius: 8px;
+            border: 1px solid #cbd5f5;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34,197,94,0.25);
+        }
+
+        button {
+            width: 100%;
+            padding: 11px;
+            margin-top: 4px;
+            border-radius: 8px;
+            border: none;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            transition: background 0.2s, transform 0.05s;
+        }
+
+        .btn-primary {
+            background: #22c55e;
+        }
+
+        .btn-primary:hover {
+            background: #15803d;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #111827;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .status {
+            margin-top: 14px;
+            font-size: 13px;
+            min-height: 18px;
+        }
+
+        .status.error { color: #dc2626; }
+        .status.success { color: #16a34a; }
+
+        .small {
+            margin-top: 18px;
+            font-size: 11px;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .small code {
+            background: #e2e8f0;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h2>Criar conta</h2>
+    <p class="subtitle">Cadastre um usuário para acessar os vídeos.</p>
+
+    <label for="email">E-mail</label>
+    <input type="email" id="email" placeholder="ex: teste@teste.com">
+
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" placeholder="Digite uma senha">
+
+    <button class="btn-primary" onclick="cadastrar()">Cadastrar</button>
+    <button class="btn-secondary" onclick="voltarLogin()">Voltar para o login</button>
+
+    <p id="status" class="status"></p>
+
+    <p class="small">
+        Esta página chama a API em <code>POST /api/auth/register</code>.
+    </p>
+</div>
+
+<script>
+    async function cadastrar() {
+        const email = document.getElementById("email").value;
+        const senha = document.getElementById("senha").value;
+        const status = document.getElementById("status");
+
+        status.className = "status";
+        status.textContent = "Enviando...";
+
+        try {
+            const resposta = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email,
+                    password: senha
+                })
+            });
+
+            if (resposta.status === 201 || resposta.status === 200) {
+                status.className = "status success";
+                status.textContent = "Usuário cadastrado com sucesso! Redirecionando para o login...";
+
+                setTimeout(() => {
+                    window.location.href = "/login.html";
+                }, 1200);
+            } else if (resposta.status === 400) {
+                const data = await resposta.json().catch(() => null);
+                status.className = "status error";
+                if (data && typeof data === "object") {
+                    const mensagens = Object.values(data).join(" | ");
+                    status.textContent = mensagens || "Dados inválidos.";
+                } else {
+                    status.textContent = "Dados inválidos.";
+                }
+            } else {
+                status.className = "status error";
+                status.textContent = "Erro ao cadastrar. Código: " + resposta.status;
+            }
+        } catch (e) {
+            console.error(e);
+            status.className = "status error";
+            status.textContent = "Erro de conexão com o servidor.";
+        }
+    }
+
+    function voltarLogin() {
+        window.location.href = "/login.html";
+    }
+</script>
+</body>
+</html>
